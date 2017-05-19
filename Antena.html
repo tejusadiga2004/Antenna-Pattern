@@ -1,0 +1,277 @@
+<html>
+<head>
+    <title>Antena Plot</title>
+    <script type="text/javascript" src="./two_min.js"></script>
+	<div id="title" style="height:25px;width:300px">
+    <h3>Antena Normalized Feild Pattern</h3>
+</div>
+
+    <style>
+        .dbattr {
+            background-color: white;
+            color: black;
+        }
+    </style>
+</head>
+<body>
+	<div id="About" style="border: 2px solid black;height:60px;width:220px;float:right;">
+	<b>  Author:</b><br>
+	  Tejus Adiga M<br>
+	  tejus.adiga@pelmicrosystems.net<br>
+</div>
+	
+<div id="inputbox" width = 300 height = 50>
+	<input id="enablePlot" type="checkbox" onClick="onCheckboxClicked()">
+	
+    <input id="functionInputText" type="text" size="50"
+	 style="font-size:15px;color:white;background-color:rgb(255,0,0);border:2px solid red"
+	 onfocus="onPlotFunction()"/>
+	 
+    <button id="submit" type="submit" autofocus="true" style="border:2px;background-color:rgb(255,210,210)"
+	 onclick="OnRedraw()" ><b>Plot Pattern</b></button>
+</div>
+
+
+<div id="inputbox1" width = 300 height = 50>
+	<input id="enablePlot1" type="checkbox" onClick="onCheckboxClicked1()">
+	
+    <input id="functionInputText1" type="text" size="50"
+	 style="font-size:15px;color:white;background-color:rgb(0,150,200);border:2px solid rgb(0,150,200)"
+	 onfocus="onPlotFunction1()"/>
+	 
+    <button id="submit1" type="submit" autofocus="true"
+	style="border:2px;background-color:rgb(200,200,255)"
+	onclick="OnRedraw()" ><b>Plot Pattern</b></button>
+</div>
+
+<div id="inputbox2" width = 300 height = 50>
+	<input id="enablePlot2" type="checkbox" onClick="onCheckboxClicked2()">
+	
+    <input id="functionInputText2" type="text" size="50"
+	 style="font-size:15px;color:white;background-color:rgb(0,160,0);border:2px solid rgb(0,160,0)"
+	 onfocus="onPlotFunction2()"/>
+	 <strong></strong>
+    <button id="submit2" type="submit" autofocus="true"
+	style="border:2px;background-color:rgb(100,200,100)"
+	onclick="OnRedraw()" ><b>Plot Pattern</b></button>
+</div>
+
+<script src="parser.js"> </script>
+<div id="canvas_container"></div>
+<script type="text/javascript">
+    var paper = null;
+    var upperId;
+    var screen;
+    var center;
+    var rad;
+
+    var raphelElements;
+    function DrawGrid () {
+
+        upperId = document.getElementById("inputbox");
+        screen = {'width' : window.innerWidth, 'height' : window.innerHeight - upperId.clientHeight};
+        center = {'x' : screen.width / 2, 'y' : screen.height / 2};
+        rad = (screen.x < screen.y)? center.x - 50 : center.y - 50;
+
+        if (paper != null) {
+            paper.remove();
+            paper = null;
+        }
+
+        paper = new Raphael(document.getElementById('canvas_container'), screen.width, screen.height);
+
+        for (var i = 0.1; i <= 1.0; i += 0.1) {
+            var radius = rad * i;
+            var strokeWidth = (((i * 10).toFixed(0) % 2) == 0)? 0.5 : 0.2;
+            paper.circle(center.x, center.y, radius).attr({"stroke-width": strokeWidth});
+
+            var angR = 277.5 * Math.PI / 180;
+            var dbx = center.x + radius * Math.cos(angR);
+            var dby = center.y + radius * Math.sin(angR);
+            var text = paper.text(dbx, dby, (i * 10).toFixed(0)).attr({'stroke-width' : 0.4}).rotate(7.5, dbx, dby);
+            var box = text.getBBox();
+            paper.rect(box.x, box.y, box.width, box.height).attr({"stroke": "white", "fill" : "white"});
+            text.toFront();
+        }
+
+        for (var i = 0; i < 360; i += 5) {
+            var angR = i * Math.PI / 180;
+            var x = Math.cos(angR);
+            var y = Math.sin(angR);
+
+            var strokeColor;
+            strokeColor = 0.05;
+            if ((i % 15) == 0) { strokeColor = 0.15; }
+            if ((i % 30) == 0) { strokeColor = 0.25; }
+
+            var arg = "M " + center.x + " " + center.y + " l " + x * rad + " " + y * rad + " " + "Z";
+            paper.path(arg).attr({'stroke-width': strokeColor});
+
+            var textPosX = center.x + (rad + 15) * x;
+            var textposY = center.y + (rad + 15) * y;
+            var textAngle = (i + 180 - 90) % 360;
+            if (textAngle > 180) {
+                textAngle = textAngle - 360;
+            }
+
+            if ((i % 15) == 0) {
+                var text = paper.text(textPosX, textposY, textAngle).rotate((i + 180 - 90) % 360, textPosX, textposY);
+                text.attr({ "font-size": 14, "font-family": "Helvetica, Arial, sans-serif", "backgroundColor" : "#FFF"});
+            }
+        }
+    }
+    window.onload = function() {
+        var inputTextBox = document.getElementById("functionInputText");
+        var inputTextBox1 = document.getElementById("functionInputText1");
+        var inputTextBox2 = document.getElementById("functionInputText2");
+		
+        inputTextBox.value = "cos((PI/2)*cos(x) + (PI/4))";
+        inputTextBox1.value = "cos((-PI/2)*cos(x) + (PI/4))";
+        inputTextBox2.value = "cos(x)*sin(x)";
+		
+        DrawGrid();
+		
+        onPlotFunction();
+        onPlotFunction1();
+		onPlotFunction2();
+				
+		var check = document.getElementById("enablePlot");
+		check.checked="checked";
+		var check1 = document.getElementById("enablePlot1");
+		check1.checked="checked";
+		var check2 = document.getElementById("enablePlot2");
+		check2.checked="checked";
+    }
+
+    function OnRedraw () {
+        DrawGrid();
+		if (document.getElementById("enablePlot").checked) {
+        	onPlotFunction();
+		}
+		
+		if (document.getElementById("enablePlot1").checked) {
+			onPlotFunction1();
+		}
+		
+		if (document.getElementById("enablePlot2").checked) {
+			onPlotFunction2();
+		}
+    }
+
+    function onPlotFunction() {
+    	var inputTextBox = document.getElementById("functionInputText");
+		EvaluvateFunction(inputTextBox, "red");
+    }
+	
+	function onPlotFunction1() {
+	 	var inputTextBox = document.getElementById("functionInputText1");
+		EvaluvateFunction(inputTextBox, "rgb(0,150,200)");
+	}
+	
+	function onPlotFunction2() {
+	 	var inputTextBox = document.getElementById("functionInputText2");
+		EvaluvateFunction(inputTextBox, "rgb(60,150,60)");
+	}
+	
+	function onCheckboxClicked() {
+		 var checkbox = document.getElementById("enablePlot");
+		 var inputBox = document.getElementById("functionInputText");
+		 var inputButton = document.getElementById("submit");
+
+		 inputBox.disabled = inputButton.disabled = !checkbox.checked;
+		 OnRedraw();
+	}
+	
+	function onCheckboxClicked1() {
+		 var checkbox = document.getElementById("enablePlot1");
+		 var inputBox = document.getElementById("functionInputText1");
+		 var inputButton = document.getElementById("submit1");
+
+		 inputBox.disabled = inputButton.disabled = !checkbox.checked;
+		 OnRedraw();
+	}
+	
+	function onCheckboxClicked2() {
+		 var checkbox = document.getElementById("enablePlot2");
+		 var inputBox = document.getElementById("functionInputText2");
+		 var inputButton = document.getElementById("submit2");
+
+		 inputBox.disabled = inputButton.disabled = !checkbox.checked;
+		 OnRedraw();
+	}
+	
+    var values;
+	function EvaluvateFunction (inputTextBox, color) {
+        var theFunction = inputTextBox.value;
+
+        var pars = new Parser();
+        var expression = pars.parse(theFunction);
+
+        values = new Array();
+        var path = 0;
+        var maxDeg = 360;
+        var prevpoint = center;
+
+        var maxValue = 0;
+        for (var deg = 0; deg < maxDeg; deg++) {
+            var angR = deg * Math.PI / 180;
+            var val = expression.evaluate({ x: angR });
+            values.push(val);
+            if (maxValue < val) {
+                maxValue = val;
+            }
+        }
+
+        var HPBWAngle = new Array();
+        var normalizedValues = new Array();
+        for (var deg = 0; deg < maxDeg; deg++) {
+            var angR = deg * Math.PI / 180;
+            var norVal = values[deg] / maxValue;
+
+
+            var curpoint = {'x' : (rad * Math.abs(norVal) *  Math.cos(angR)) + center.x,
+                            'y' : (rad * Math.abs(norVal) *  Math.sin(angR)) + center.y};
+
+            var v = (norVal * 10);
+            if ((norVal * 10) == 5) {
+
+                var HPBWPoint = {'x' : (rad * Math.cos(angR)) + center.x,
+                                 'y' : (rad * Math.sin(angR)) + center.y};
+                HPBWAngle.push(HPBWPoint);
+            }
+
+            normalizedValues.push(curpoint);
+        }
+
+        values = null;
+
+        for ( var ind = 0; ind < HPBWAngle.length; ind ++ ) {
+            var arg = "M " + center.x + " " + center.y + " l " + HPBWAngle.x * rad + " " + HPBWAngle.y * rad + " " + "Z";
+            paper.path(path).rotate(-90, center.x, center.y).attr({"stroke" : "green", "stroke-width" : 1});
+        }
+
+        for (var deg = 0; deg < maxDeg; deg++) {
+
+            var curpoint = normalizedValues[deg];
+
+            if (deg == 0) {
+                path = "M " + curpoint.x.toFixed(1) + " " + curpoint.y.toFixed(0);
+            } else {
+                path += " l " + (curpoint.x - prevpoint.x).toFixed(1) + " " + (curpoint.y - prevpoint.y).toFixed(1);
+            }
+            prevpoint = curpoint;
+        }
+
+        path += " Z";
+        var thepath = paper.path(path).rotate(-90, center.x, center.y).attr({"stroke" : color, "stroke-width" : 2});
+	}
+	
+
+
+</script>
+
+Author:<br>
+<b>Tejus Adiga M</b>,<br>
+tejusadiga2004@gmail.com
+</body>
+</html> 
